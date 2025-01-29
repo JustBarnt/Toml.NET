@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>latestmajor</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>TomlReader</RootNamespace>
+        <AssemblyName>TomlReader</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Toml.Exceptions\Toml.Exceptions.csproj" />
+      <ProjectReference Include="..\Toml.Writer\Toml.Writer.csproj" />
+    </ItemGroup>
+
+</Project>
