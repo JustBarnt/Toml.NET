@@ -1,26 +1,12 @@
 ﻿namespace TomlReader;
 
-public abstract partial class TomlReader : IDisposable
+public class TomlReader
 {
-    public abstract TomlReadState ReadState { get; }
+    public TomlDictionary TomlDictionary { get; } = [];
 
-    // Indicates if we are at the end of the stream
-    public abstract bool EOF { get; }
-
-    // Current depth of the in-memory Dictionary
-    public abstract int Depth { get; }
-
-    // Returns the value of the current key
-    public abstract string Value { get; }
-
-    // Returns the value type of the current key
-    public virtual Type ValueType => typeof(string);
-
-    public virtual TomlDictionary TomlDictionary { get; } = [];
-
-    public void Dispose()
+    //TODO: Write out this class and make sure TomlDictionary gets assigned to it
+    public void Read(string filePath)
     {
-        GC.SuppressFinalize(this);
-        throw new NotImplementedException();
+
     }
 }

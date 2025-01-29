@@ -8,25 +8,24 @@ namespace TomlReader;
 public class TomlDictionary :  Dictionary<string, object>, ITomlDictionary
 {
     private IDictionary<string, object> self = new Dictionary<string, object>();
-
     public IDictionary<string, object> CreateTable(string tableName)
     {
         string[] segments = tableName.Split('.');
-        IDictionary<string, object> current = self;
+        IDictionary<string, object> active_table = self;
 
-        foreach (string part in segments)
+        foreach (string segment in segments)
         {
-            if (!current.TryGetValue(part, out object? value))
+            if (!active_table.TryGetValue(segment, out object? value))
             {
-                current.Add(part, new Dictionary<string, object>());
+                active_table.Add(segment, new Dictionary<string, object>());
                 value = new Dictionary<string, object>();
-                current[part] = value;
+                active_table[segment] = value;
             }
 
-            if (value is IDictionary<string, object> next) current = next;
+            if (value is IDictionary<string, object> next) active_table = next;
         }
 
-        return current;
+        return active_table;
     }
 
     public bool ValidateTableName(string tableName) => !string.IsNullOrWhiteSpace(tableName) && !tableName.Any(static c => char.IsLetterOrDigit(c) && c != '.');
@@ -73,52 +72,30 @@ public class TomlDictionary :  Dictionary<string, object>, ITomlDictionary
 
     public object ParseValue(string value, IEnumerator<string> lines)
     {
-        string multi_line_string = "\"\"\"";
-        string mutli_line_literal = "'''";
+        const string string_literal = "'''";
 
         try
         {
-            if (value.StartsWith(multi_line_string))
-            {
-                return ParseMultilineString(value, lines, StringType.Default);
-            }
-            else if (value.StartsWith(mutli_line_literal))
-            {
-                return ParseMultilineString(value, lines, StringType.Literal);
-            }
-            else if ((value.StartsWith('"') && value.EndsWith('"')) || (value.StartsWith('\'') && value.EndsWith('\'')))
-            {
-                return ParseString(value);
-            }
-            else if (double.TryParse(value, out double number))
-            {
-                return number;
-            }
-            else if (bool.TryParse(value, out bool boolean))
-            {
-                return boolean;
-            }
+            if (value.StartsWith("\"\"\"")) return ParseMultilineString(value, lines, StringType.Default);
+
+            if (value.StartsWith(string_literal)) return ParseMultilineString(value, lines, StringType.Literal);
+
+            if ((value.StartsWith('"') && value.EndsWith('"')) || (value.StartsWith('\'') && value.EndsWith('\''))) return ParseString(value);
+
+            if (double.TryParse(value, out double number)) return number;
+
+            if (bool.TryParse(value, out bool boolean)) return boolean;
             //TODO: Handle complex values like TOML arrays
-            else if (value.StartsWith("[[") && value.EndsWith("]]"))
-            {
-                throw new NotImplementedException("TomlParser currently doesn't support TOML Arrays");
-            }
+            if (value.StartsWith("[[") && value.EndsWith("]]")) throw new NotImplementedException("TomlParser currently doesn't support TOML Arrays");
 
-            if (value.StartsWith('[') && value.EndsWith(']'))
-            {
-                //TODO: Decide if hardcoding a Character separator is worth?
-                string[] items = value[1..^1].Split(',', StringSplitOptions.RemoveEmptyEntries);
-                List<object> list = [];
+            if (!value.StartsWith('[') || !value.EndsWith(']')) return value; //Fallback for unrecognized types
 
-                foreach (string item in items)
-                {
-                    list.Add(ParseValue(item, lines));
-                }
+            //TODO: Decide if hardcoding a Character separator is worth?
+            string[] items = value[1..^1].Split(',', StringSplitOptions.RemoveEmptyEntries);
+            List<object> list = [];
+            list.AddRange(items.Select(item => ParseValue(item, lines)));
 
-                return list;
-            }
-
-            return value; //Fallback for unrecognized types
+            return list;
         }
         catch (Exception ex)
         {

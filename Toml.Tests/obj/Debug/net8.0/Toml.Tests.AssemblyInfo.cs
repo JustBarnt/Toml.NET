@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TomlTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+93fab10ef81e9dfbfe889d25c41395a712bfd1f8")]
 [assembly: System.Reflection.AssemblyProductAttribute("TomlTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TomlTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
