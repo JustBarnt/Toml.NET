@@ -7,10 +7,4 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Toml.Exceptions\Toml.Exceptions.csproj" />
-      <ProjectReference Include="..\Toml.Reader\Toml.Reader.csproj" />
-      <ProjectReference Include="..\Toml.Writer\Toml.Writer.csproj" />
-    </ItemGroup>
-
 </Project>

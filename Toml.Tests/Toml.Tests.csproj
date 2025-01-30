@@ -23,9 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Toml.Exceptions\Toml.Exceptions.csproj" />
-      <ProjectReference Include="..\Toml.Reader\Toml.Reader.csproj" />
-      <ProjectReference Include="..\Toml.Writer\Toml.Writer.csproj" />
+      <ProjectReference Include="..\Toml\Toml.csproj" />
     </ItemGroup>
 
 </Project>
