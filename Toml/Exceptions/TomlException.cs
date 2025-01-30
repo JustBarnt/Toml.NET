@@ -14,11 +14,14 @@ public class TomlException : Exception
     /// </summary>
     public TomlException() {}
 
+    public TomlException(string message) : base(message) {}
+
     /// <summary>
     /// Throws an exception with a message
     /// </summary>
     /// <param name="message">What caused the exception to get thrown</param>
-    public TomlException(string message) : base(message) {}
+    /// <param name="innerException">The Inner <see cref="Exception"/> that was thrown</param>
+    public TomlException(string message, Exception innerException) : base(message, innerException) {}
 
     /// <summary>
     /// Wraps the existing exception in a TomlException automatically building a <see cref="StackTrace"/> message

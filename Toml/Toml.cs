@@ -4,56 +4,62 @@ using System.Text;
 using Toml.Exceptions;
 using Toml.Reader;
 
+using TomlDictionary = System.Collections.Generic.IDictionary<string, object>;
 
 namespace Toml;
 
 public partial class Toml
 {
-    public string FilePath { get; }
+    public TomlDictionary TomlDictionary { get; private set; }
+    private string path { get; }
 
     public Toml(string filePath)
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(filePath);
-
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException("File not found", filePath);
-
-            FilePath = filePath;
+            if (!File.Exists(path)) throw new FileNotFoundException("File not found", path);
+            path = filePath;
         }
         catch(FileNotFoundException ex)
         {
-            //Throw a more detailed Stack Trace, but preserve our original stack strace as well
-            throw new FileNotFoundException(TomlException.BuildExceptionMessage(ex), ex);
+            throw new TomlException(ex);
         }
-        catch(ArgumentNullException ex)
+        catch(Exception ex)
         {
-            throw new ArgumentNullException(TomlException.BuildExceptionMessage(ex), ex);
+            throw new TomlException("An unknown error occured.", ex);
         }
-
     }
 
-    public Dictionary<string, object> Read()
+    /// <summary>
+    /// Reads the contents of the Toml file adds to the <see cref="TomlDictionary"/>
+    /// </summary>
+    /// <exception cref="TomlException"></exception>
+    public void Read()
     {
-        IDictionary<string, object> toml = new Dictionary<string, object>();
         try
         {
             // Open the file granting read access, and FileShare Reading access meaning another application can open the
             // file without getting an error about the file being used by another process
-            string[] lines = File.ReadAllLines(FilePath);
+            string[] lines = File.ReadAllLines(path);
 
-            return new Dictionary<string, object>();
+            TomlReader reader = new (lines);
+            TomlDictionary = reader.TomlDictionary;
         }
-        catch(FileNotFoundException ex)
+        catch(KeyNotFoundException ex)
         {
-            throw new FileNotFoundException(TomlException.BuildExceptionMessage(ex));
+            throw new TomlException(ex);
         }
         catch(Exception ex)
         {
-            throw new Exception(TomlException.BuildExceptionMessage(ex));
+            throw new TomlException(ex);
         }
     }
+
+    //TODO: Implement Write()
+    public void Write() => throw new NotImplementedException();
+
+    //TODO: Implement validation
+    public bool ValidateToml() => throw new NotImplementedException();
 }
 
 //TODO: Implement Asinc Class
