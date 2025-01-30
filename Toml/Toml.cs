@@ -13,11 +13,25 @@ public partial class Toml
 
     public Toml(string filePath)
     {
-        if (!File.Exists(filePath))
-            throw new FileNotFoundException("File not found", filePath);
+        try
+        {
+            ArgumentNullException.ThrowIfNull(filePath);
 
-        ArgumentNullException.ThrowIfNull(filePath);
-        FilePath = filePath;
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("File not found", filePath);
+
+            FilePath = filePath;
+        }
+        catch(FileNotFoundException ex)
+        {
+            //Throw a more detailed Stack Trace, but preserve our original stack strace as well
+            throw new FileNotFoundException(TomlException.BuildExceptionMessage(ex), ex);
+        }
+        catch(ArgumentNullException ex)
+        {
+            throw new ArgumentNullException(TomlException.BuildExceptionMessage(ex), ex);
+        }
+
     }
 
     public Dictionary<string, object> Read()
@@ -33,11 +47,11 @@ public partial class Toml
         }
         catch(FileNotFoundException ex)
         {
-            throw new FileNotFoundException(TomlException.ExceptionBuilder(ex));
+            throw new FileNotFoundException(TomlException.BuildExceptionMessage(ex));
         }
         catch(Exception ex)
         {
-            throw new Exception(TomlException.ExceptionBuilder(ex));
+            throw new Exception(TomlException.BuildExceptionMessage(ex));
         }
     }
 }
