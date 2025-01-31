@@ -1,24 +1,19 @@
-﻿using System.Diagnostics;
-using System.Text;
-
-using Toml.Exceptions;
+﻿using Toml.Exceptions;
 using Toml.Reader;
-
-using TomlDictionary = System.Collections.Generic.IDictionary<string, object>;
 
 namespace Toml;
 
-public partial class Toml
+public class TomlFile
 {
     public TomlDictionary TomlDictionary { get; private set; }
-    private string path { get; }
+    private string[] stored_lines { get; }
 
-    public Toml(string filePath)
+    public TomlFile(string filePath)
     {
         try
         {
-            if (!File.Exists(path)) throw new FileNotFoundException("File not found", path);
-            path = filePath;
+            if (!File.Exists(filePath)) throw new FileNotFoundException("File not found", filePath);
+            stored_lines = File.ReadAllLines(filePath);
         }
         catch(FileNotFoundException ex)
         {
@@ -40,10 +35,8 @@ public partial class Toml
         {
             // Open the file granting read access, and FileShare Reading access meaning another application can open the
             // file without getting an error about the file being used by another process
-            string[] lines = File.ReadAllLines(path);
-
-            TomlReader reader = new (lines);
-            TomlDictionary = reader.TomlDictionary;
+            TomlReader reader = new(stored_lines);
+            TomlDictionary = reader.ToDictionary();
         }
         catch(KeyNotFoundException ex)
         {

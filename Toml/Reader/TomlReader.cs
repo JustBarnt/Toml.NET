@@ -1,6 +1,7 @@
-﻿using Toml.Exceptions;
-using Toml.Reader.Extensions;
-using Toml.Syntax;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
+
+using Toml.Exceptions;
 
 namespace Toml.Reader;
 
@@ -13,11 +14,7 @@ public class TomlReader(string[] lines)
     private List<string> unread_lines = lines.ToList();
     private List<string> table_names = [];
 
-    private string? current_key;
-    private TomlDictionary? current;
-
-    // Used for separating the values in an array
-    private static readonly char separator = ',';
+    private TomlDictionary? current_dictionary;
 
     /// <summary>
     /// The Toml file parsed into a <c>Dictionary&lt;string, object&gt;</c>
@@ -28,9 +25,9 @@ public class TomlReader(string[] lines)
     /// Reads the given Toml file into a <see cref="TomlDictionary"/>
     /// </summary>
     /// <exception cref="TomlException">Throws if it fails to read and store into a <see cref="TomlDictionary"/> at any point</exception>
-    public void ToDictionary()
+    public TomlDictionary ToDictionary()
     {
-        current = TomlDictionary;
+        current_dictionary = TomlDictionary;
         // Set our initial table to the root of our dictionary
         using (var lines = unread_lines.GetEnumerator())
         {
@@ -38,80 +35,85 @@ public class TomlReader(string[] lines)
             {
                 string line = lines.Current.Trim();
 
-                char first_char = line[0];
-
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
-
-                switch (line.SelectFirstWith(['#', '[']))
+                switch (line.FirstOrDefaultWith(['#', '[']))
                 {
-                     case '#':
-                     case null:
-                         continue;
+                    // If a comment or an empty line we just continue to the next line
+                    case '#':
 
+                    // We are at the start of a new table we need to create a new table set our current_dictionary to it
                     case '[':
-                        // Get the substring of our line. I.E. [table] => table
-                        string table_name = line[1..^1];
-                        CreateTable(table_name);
+                        // Get the value of our table without the braces
+                        CreateTable(line[1..^1]);
                         continue;
+
+                    // We are at a key/value pair so we just add it to our current dictionary
+                    // We send the value through JsonSerializer to get out what should be the correct value of the even if
+                    // it is an array or object
                     default:
-                        // Figure out type of value
-                        // Parse out the key/value pair then move on
-                        if (current_key == null) TomlDictionary.Add(line.Split("=")[0].Trim(), line.Split("=")[1].Trim());
+                        string[] segments = line.Split("=", 2,StringSplitOptions.TrimEntries);
+                        string key = segments[0];
+                        string string_value = segments[1];
+                        object? value;
+
+                        if (string_value.StartsWith('[') && string_value.EndsWith(']'))
+                        {
+                            JsonElement[] elements = JsonSerializer.Deserialize<JsonElement[]>(string_value)!;
+                            value = GetEnumerationValue(elements);
+                        }
+                        else if (string_value.StartsWith('{') && string_value.EndsWith('}'))
+                        {
+                            TomlDictionary table = new();
+                            string[] obj_values = string_value
+                                .Trim('{', '}')
+                                .Split(",", StringSplitOptions.TrimEntries);
+
+                            foreach (string v in obj_values)
+                            {
+                                string[] kvp = v.Split('=', StringSplitOptions.TrimEntries);
+                                string t_key = kvp[0];
+                                object? t_value = GetValue(JsonSerializer.Deserialize<JsonElement>(kvp[1]));
+
+                                if (t_value is null) throw new TomlException($"Error reading TOML into dictionary");
+                                table.Add(t_key, t_value);
+                            }
+                            value = table;
+                        }
+                        else
+                        {
+                            JsonElement element = JsonSerializer.Deserialize<JsonElement>(string_value);
+                            value = GetValue(element);
+                        }
+
+                        if (value is null) throw new TomlException("Error reading TOML file keys must have a value");
+
+                        current_dictionary.Add(key, value);
                         continue;
                 }
-
-                // First check if line is a key/value or table declaration
-                // if key/value split on '=' then check if the first char of the value side is one of the items mentioned above
-                // to get know what its value type is
-
-                // if the line is a table declaration create a new Dictionary<string,object> and add that to the TomlDictionary and
-                // split the string on "." to get the total length of segments to add to the dictionary
-                // we loop through each segment and check if the key already exists and if it doesn't we add that key and a new Dictionary
-                // to the TomlDictionary and return our current position
             }
         }
+
+        return TomlDictionary;
     }
 
-    // Get value after '='
-    // if value is surround in quotes it is a string
-    // if value is number its an int, float, etc.
-    // if value is true or false it is a boolean
-    // if value starts with [, or { it is an array or inline table
-
-    private void ReadLine(string line)
+    private static object?[] GetEnumerationValue(JsonElement[] elements)
     {
-        // We are an empty line, so we are done here.
-        if (string.IsNullOrWhiteSpace(line)) return;
+        List<object?> converted_values = [];
+        converted_values.AddRange(elements.Select(GetValue));
+        return converted_values.Count == 0 ? [] : converted_values.ToArray();
+    }
 
-        char first_char = line[0];
+    private static object? GetValue(JsonElement value)
+    {
+        JsonValueKind kind = value.ValueKind;
 
-        switch (first_char)
+        return kind switch
         {
-            case '[':
-                // Get the substring of our line. I.E. [table] => table
-                string table_name = line[1..^1];
-                CreateTable(table_name);
-                break;
-            case '#':
-                return;
-
-            default:
-                // Figure out type of value
-                // Parse out the key/value pair then move on
-                if (current_key == null) TomlDictionary.Add(line.Split("=")[0].Trim(), line.Split("=")[1].Trim());
-                return;
-        }
-
-        // First check if line is a key/value or table declaration
-        // if key/value split on '=' then check if the first char of the value side is one of the items mentioned above
-        // to get know what its value type is
-
-        // if the line is a table declaration create a new Dictionary<string,object> and add that to the TomlDictionary and
-        // split the string on "." to get the total length of segments to add to the dictionary
-        // we loop through each segment and check if the key already exists and if it doesn't we add that key and a new Dictionary
-        // to the TomlDictionary and return our current position
-
+            JsonValueKind.True or JsonValueKind.False => value.GetBoolean(),
+            JsonValueKind.Number or JsonValueKind.String => value.GetRawText(),
+            _ => null
+        };
     }
 
     /// <summary>
@@ -132,17 +134,18 @@ public class TomlReader(string[] lines)
 
         foreach(string key in keys)
         {
-            if (current is not null && current.TryGetValue(key, out object? value))
+            if (current_dictionary is not null && current_dictionary.TryGetValue(key, out object? _))
             {
-                current = (TomlDictionary)TomlDictionary[key];
+                // If the key exists, we just update our current_dictionary to that dictionary.
+                // and continue through until our we have a new key
+                current_dictionary = (TomlDictionary)TomlDictionary[key];
                 continue;
             }
 
             // Add our key and a new empty dictionary to our TomlDictionary
             TomlDictionary.Add(key, new TomlDictionary());
             // Then set our current and current_key to continue moving inward as far as we need to
-            current = (TomlDictionary)TomlDictionary[key];
-            current_key = key;
+            current_dictionary = (TomlDictionary)TomlDictionary[key];
         }
     }
 }
