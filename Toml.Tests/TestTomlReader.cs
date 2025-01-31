@@ -7,10 +7,7 @@ namespace TomlTests;
 
 public class TestTomlReader : IDisposable
 {
-    private string empty_toml_file;
-    private string simple_toml_file;
-
-    private Dictionary<string, string> file_dictionary = [];
+    private readonly Dictionary<string, string> file_dictionary = [];
 
     /// <summary>
     /// Our test fixture to generate bad and good toml files to test with
@@ -21,11 +18,12 @@ public class TestTomlReader : IDisposable
         file_dictionary.Add("simple_toml.toml", """
             isTrue = true
             obj = {foo = "bar", fizz = "buzz"}
-            numArray = [1,2,3,4,5,6]
-            [table1]"
+            strArray = ["one", "two", "three", "four"]
+            numArray = [1,2,3,4,5,6,7.5,3.14568,9123123]
+            [table1]
             DayOfWeek = "Monday"
             HourOfDay = 12
-            MinuteOfDay = 0
+            MinuteOfHour = 0
         """);
 
         foreach (KeyValuePair<string, string> entry in file_dictionary)
@@ -61,9 +59,19 @@ public class TestTomlReader : IDisposable
     [Fact]
     public void Pass_Reads_SimpleTomlFile()
     {
+        object? assignment;
         TomlFile toml = new("simple_toml.toml");
         toml.Read();
-        Assert.True(toml.TomlDictionary.Count is 3);
+        var dict = toml.TomlDictionary;
+        Assert.Multiple(
+            () => Assert.True(dict.TryGetValue("isTrue", out assignment)),
+            () => Assert.True(dict.TryGetValue("obj", out assignment)),
+            () => Assert.True(dict.TryGetValue("strArray", out assignment)),
+            () => Assert.True(dict.TryGetValue("numArray", out assignment)),
+            () => Assert.True(dict.TryGetValue("table1.DayOfWeek", out assignment)),
+            () => Assert.True(dict.TryGetValue("table1.HourOfDay", out assignment)),
+            () => Assert.True(dict.TryGetValue("table1.MinuteOfHour", out assignment))
+        );
     }
 
     public void Dispose()

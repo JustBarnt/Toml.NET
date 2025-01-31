@@ -38,7 +38,6 @@ public class TomlException : Exception
     /// <param name="innerException">The inner exception thrown that caused the TomlException to catch and throw.</param>
     public TomlException(Exception ex, Exception innerException) : base(BuildExceptionMessage(ex), innerException) {}
 
-
     /// <summary>
     /// Creates a detailed oriented <see cref="StackTrace"/> message
     /// so we know which file, method, and line in our library the error occured at.

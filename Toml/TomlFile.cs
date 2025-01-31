@@ -1,11 +1,13 @@
-﻿using Toml.Exceptions;
+﻿using System.Collections;
+
+using Toml.Exceptions;
 using Toml.Reader;
 
 namespace Toml;
 
 public class TomlFile
 {
-    public TomlDictionary TomlDictionary { get; private set; }
+    public TomlDictionary TomlDictionary { get; private set; } = new(new Dictionary<string,object>());
     private string[] stored_lines { get; }
 
     public TomlFile(string filePath)
