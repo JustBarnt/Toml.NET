@@ -35,10 +35,13 @@ public class TestTomlReader : IDisposable
     [Fact]
     public void Fails_On_KeyNotFound()
     {
-        TomlFile toml = new("simple_toml.toml");
-        toml.Read();
-        TomlDictionary keys = toml.TomlDictionary;
-        Assert.Throws<KeyNotFoundException>(() => keys["unknown"]);
+        Assert.Throws<KeyNotFoundException>(() =>
+        {
+            TomlFile toml = new("simple_toml.toml");
+            toml.Read();
+            TomlDictionary keys = toml.TomlDictionary;
+            return keys["unknown"];
+        });
     }
 
     [Fact]
