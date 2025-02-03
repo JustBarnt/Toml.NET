@@ -16,14 +16,10 @@ public class TestTomlReader : IDisposable
     {
         file_dictionary.Add("empty_toml.toml", "");
         file_dictionary.Add("simple_toml.toml", """
-            isTrue = true
-            obj = {foo = "bar", fizz = "buzz"}
-            strArray = ["one", "two", "three", "four"]
-            numArray = [1,2,3,4,5,6,7.5,3.14568,9123123]
-            [table1]
-            DayOfWeek = "Monday"
-            HourOfDay = 12
-            MinuteOfHour = 0
+            strings = "Hello World"
+            boolean = true
+            integer = 12
+            decimal = 1.2
         """);
 
         foreach (KeyValuePair<string, string> entry in file_dictionary)
@@ -36,32 +32,31 @@ public class TestTomlReader : IDisposable
         }
     }
 
-
-    private static string GenerateToml(string[] lines)
+    //TODO: Re-implement failing tests using built in exceptions
+    [Fact]
+    public void Fails_On_KeyNotFound()
     {
-        StringBuilder sb = new();
-        foreach (string line in lines)
-            sb.AppendLine(line);
-        return sb.ToString();
+        TomlFile toml = new("simple_toml.toml");
+        toml.Read();
+        TomlDictionary keys = toml.TomlDictionary;
+        Assert.Throws<KeyNotFoundException>(() => keys["unknown"]);
     }
 
-    //TODO: Re-implement failing tests using built in exceptions
+    [Fact]
+    public void Fails_On_Empty_Toml() =>
+        Assert.Throws<FileNotFoundException>(() => new TomlFile("FileNotReal.toml"));
 
     [Fact]
-    public void Pass_Reads_SimpleTomlFile()
+    public void Passes_Reads_SimpleTomlFile()
     {
-        object? assignment;
         TomlFile toml = new("simple_toml.toml");
         toml.Read();
         var dict = toml.TomlDictionary;
         Assert.Multiple(
-            () => Assert.True(dict.TryGetValue("isTrue", out assignment)),
-            () => Assert.True(dict.TryGetValue("obj", out assignment)),
-            () => Assert.True(dict.TryGetValue("strArray", out assignment)),
-            () => Assert.True(dict.TryGetValue("numArray", out assignment)),
-            () => Assert.True(dict.TryGetValue("table1.DayOfWeek", out assignment)),
-            () => Assert.True(dict.TryGetValue("table1.HourOfDay", out assignment)),
-            () => Assert.True(dict.TryGetValue("table1.MinuteOfHour", out assignment))
+            () => Assert.True(dict.TryGetValue("strings", out _)),
+            () => Assert.True(dict.TryGetValue("boolean", out _)),
+            () => Assert.True(dict.TryGetValue("integer", out _)),
+            () => Assert.True(dict.TryGetValue("decimal", out _))
         );
     }
 

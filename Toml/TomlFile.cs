@@ -19,7 +19,7 @@ public class TomlFile
         }
         catch(FileNotFoundException ex)
         {
-            throw new TomlException(ex);
+            throw new FileNotFoundException("File not found", ex);
         }
         catch(Exception ex)
         {
