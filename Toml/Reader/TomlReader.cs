@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Text.Json;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 using Newtonsoft.Json;
 
@@ -22,8 +20,8 @@ public partial class TomlReader(string[] lines)
     private readonly List<string> unread_lines = lines.ToList();
     private readonly List<string> table_names = [];
 
-    private TomlDictionary full_dictionary = new(new Dictionary<string, object>());
-    private TomlDictionary partial_dictionary = new(new Dictionary<string, object>());
+    private TomlDictionary full_dictionary = new();
+    private TomlDictionary partial_dictionary = new();
 
     /// <summary>
     /// Reads the given Toml file into a <see cref="TomlDictionary"/>
@@ -106,7 +104,7 @@ public partial class TomlReader(string[] lines)
             }
 
             // Add our key and a new empty dictionary to our full_dictionary
-            full_dictionary.Add(key, new TomlDictionary(new Dictionary<string, object>()));
+            full_dictionary.Add(key, new TomlDictionary());
             // Then set our partial
             partial_dictionary = (TomlDictionary)full_dictionary[key];
         }

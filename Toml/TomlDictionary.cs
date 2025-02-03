@@ -6,8 +6,9 @@ using Toml.Exceptions;
 namespace Toml;
 
 
-public class TomlDictionary(IDictionary<string, object> dictionary) : IDictionary<string, object>
+public class TomlDictionary() : IDictionary<string, object>
 {
+    private readonly IDictionary<string, object> dictionary = new Dictionary<string, object>();
     #region Properties
     public int Count => dictionary.Count;
     public bool IsReadOnly => dictionary.IsReadOnly;

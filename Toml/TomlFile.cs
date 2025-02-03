@@ -7,7 +7,7 @@ namespace Toml;
 
 public class TomlFile
 {
-    public TomlDictionary TomlDictionary { get; private set; } = new(new Dictionary<string,object>());
+    public TomlDictionary TomlDictionary { get; private set; } = new();
     private string[] stored_lines { get; }
 
     public TomlFile(string filePath)
