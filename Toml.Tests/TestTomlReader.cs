@@ -32,7 +32,6 @@ public class TestTomlReader : IDisposable
         }
     }
 
-    //TODO: Re-implement failing tests using built in exceptions
     [Fact]
     public void Fails_On_KeyNotFound()
     {
