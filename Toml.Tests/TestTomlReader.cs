@@ -2,20 +2,29 @@ using System.Text;
 using Toml;
 
 using Toml.Exceptions;
+using Toml.Reader.Lexicon;
+
+using Xunit.Abstractions;
 
 namespace TomlTests;
 
 public class TestTomlReader : IDisposable
 {
+    private readonly ITestOutputHelper test_output_helper;
     private readonly Dictionary<string, string> file_dictionary = [];
 
     /// <summary>
     /// Our test fixture to generate bad and good toml files to test with
     /// </summary>
-    public TestTomlReader()
+    public TestTomlReader(ITestOutputHelper testOutputHelper)
     {
+        test_output_helper = testOutputHelper;
         file_dictionary.Add("empty_toml.toml", "");
         file_dictionary.Add("simple_toml.toml", """
+            # Start Of File
+            sample = true
+
+            [datatypes]
             strings = "Hello World"
             boolean = true
             integer = 12
@@ -30,6 +39,16 @@ public class TestTomlReader : IDisposable
                 fs.Write(bytes, 0, bytes.Length);
             }
         }
+    }
+
+    [Fact]
+    public void Lexer_Passes()
+    {
+        string text = File.ReadAllText("simple_toml.toml");
+        Lexer lexicon = new Lexer(text);
+        List<Token> lex = lexicon.Tokenize().ToList();
+
+        Assert.True(true);
     }
 
     [Fact]

@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 
 using Toml.Exceptions;
 
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Toml.Reader;
 
@@ -39,10 +38,12 @@ public partial class TomlReader(string[] lines)
 
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
-                switch (line.FirstOrDefaultWith(['#', '[', '\n']))
+                switch (line.Trim().First())
                 {
                     // Toml Comment
                     case '#':
+                    case '\r':
+                    case '\n':
                         continue;
 
                     // Toml Table
